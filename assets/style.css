@@ -1,15 +1,136 @@
-#MainMenu {
-    visibility: hidden;
+@font-face {
+    font-family: "Geist";
+    src: url("fonts/Geist-Regular.woff2") format("woff2");
+    font-weight: 400;
 }
 
-footer {
-    visibility: hidden;
+@font-face {
+    font-family: "Geist";
+    src: url("fonts/Geist-Medium.woff2") format("woff2");
+    font-weight: 500;
 }
 
-header {
-    visibility: hidden;
+@font-face {
+    font-family: "Geist";
+    src: url("fonts/Geist-Bold.woff2") format("woff2");
+    font-weight: 700;
 }
 
-.block-container {
-    padding-top: 2rem;
+.stApp {
+    background: var(--bg);
+    font-family: "Geist", sans-serif;
+}
+
+.metric-card{
+    background:#161B22;
+    border:1px solid #30363D;
+    border-radius:18px;
+
+    padding:26px;
+
+    min-height:210px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+
+    box-sizing:border-box;
+}
+
+.metric-card:hover{
+    transform:translateY(-6px);
+    border-color:#7C5CFC;
+    box-shadow:0 12px 35px rgba(124,92,252,.18);
+}
+
+.metric-icon{
+    font-size:34px;
+    margin-bottom:22px;
+}
+
+.metric-title{
+    color:#94A3B8;
+    font-size:16px;
+    margin-bottom:18px;
+}
+
+.metric-value{
+    font-size:42px;
+    font-weight:700;
+    color:white;
+    line-height:1.1;
+}
+
+
+.productivity-card{
+    background:#161B22;
+    border:1px solid #30363D;
+    border-radius:18px;
+    padding:24px;
+}
+
+.productivity-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.productivity-title h3{
+    margin:0;
+    color:white;
+    font-size:24px;
+}
+
+.productivity-score{
+    color:#7C5CFC;
+    font-size:42px;
+    font-weight:700;
+}
+
+.productivity-desc{
+    color:#94A3B8;
+    margin-bottom:20px;
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"]{
+    border-radius:18px !important;
+    border:1px solid #30363D !important;
+    background:#161B22 !important;
+    padding:18px !important;
+}
+
+
+/* Slider Track */
+.stSlider [data-baseweb="slider"] > div > div {
+    background: #7C5CFC !important;
+}
+
+/* الجزء اللي قبل المؤشر */
+.stSlider [data-baseweb="slider"] [role="slider"] + div {
+    background: #7C5CFC !important;
+}
+
+/* Thumb (الدائرة) */
+.stSlider [role="slider"] {
+    background: #7C5CFC !important;
+    border: 3px solid #7C5CFC !important;
+    box-shadow: 0 0 10px rgba(124, 92, 252, 0.4);
+}
+
+/* Segmented Control */
+
+[data-testid="stSegmentedControl"]{
+    margin-bottom:18px;
+}s
+
+[data-testid="stSegmentedControl"] button{
+    border-radius:10px;
+    transition:.2s;
+}
+
+[data-testid="stSegmentedControl"] button[aria-pressed="true"]{
+    background:#7C5CFC !important;
+    color:white !important;
+    border-color:#7C5CFC !important;
 }
