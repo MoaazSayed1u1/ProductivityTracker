@@ -9,7 +9,7 @@ def create_heatmap(df):
 
         go.Scatter(
 
-            x=df["week"]*1.5,
+            x=df["week"],
 
             y=df["weekday"],
 
@@ -19,7 +19,7 @@ def create_heatmap(df):
 
                 symbol="square",
 
-                size=15,
+                size=13,
 
                 color=df["color"],
 
@@ -74,10 +74,10 @@ def create_heatmap(df):
         plot_bgcolor="#0D1117",
 
         margin=dict(
-            l=5,
-            r=5,
-            t=5,
-            b=5
+            l=10,
+            r=10,
+            t=10,
+            b=10
         ),
 
         showlegend=False
