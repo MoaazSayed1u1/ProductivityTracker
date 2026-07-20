@@ -19,7 +19,7 @@ def create_heatmap(df):
 
                 symbol="square",
 
-                size=15,
+                size=12,
 
                 color=df["color"],
 
