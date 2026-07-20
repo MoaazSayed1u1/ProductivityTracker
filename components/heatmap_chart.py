@@ -19,7 +19,7 @@ def create_heatmap(df):
 
                 symbol="square",
 
-                size=11,
+                size=13,
 
                 color=df["color"],
 
@@ -67,16 +67,16 @@ def create_heatmap(df):
 
     fig.update_layout(
 
-        height=180,
+        height=260,
 
         paper_bgcolor="#0D1117",
 
         plot_bgcolor="#0D1117",
 
         margin=dict(
-            l=20,
-            r=20,
-            t=20,
+            l=10,
+            r=10,
+            t=10,
             b=10
         ),
 
