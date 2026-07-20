@@ -192,7 +192,7 @@ with col4:
 
 st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
-left, right = st.columns([1, 2.7], gap="small")
+left, right = st.columns([1, 3], gap="small")
 
 with left:
 
