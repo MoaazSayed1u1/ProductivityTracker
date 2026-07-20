@@ -19,7 +19,7 @@ def create_heatmap(df):
 
                 symbol="square",
 
-                size=14,
+                size=13,
 
                 color=df["color"],
 
@@ -74,10 +74,10 @@ def create_heatmap(df):
         plot_bgcolor="#0D1117",
 
         margin=dict(
-            l=10,
-            r=10,
-            t=10,
-            b=10
+            l=5,
+            r=5,
+            t=5,
+            b=5
         ),
 
         showlegend=False
