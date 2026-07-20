@@ -9,7 +9,7 @@ def create_heatmap(df):
 
         go.Scatter(
 
-            x=df["week"],
+            x=df["week"]*1.3,
 
             y=df["weekday"],
 
