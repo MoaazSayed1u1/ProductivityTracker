@@ -87,6 +87,7 @@ def create_heatmap(df):
     month_positions = (
         df.groupby("month")["week"]
         .min()
+        .mul(1.3)   # نفس الرقم اللي استخدمته فوق
         .reset_index()
     )
 
