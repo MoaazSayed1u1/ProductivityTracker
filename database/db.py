@@ -682,18 +682,22 @@ def get_last_30_days():
 
 
 def get_year_data():
+    supabase = get_supabase()
 
-    conn = get_connection()
+    result = (
+        supabase
+        .table("productivity")
+        .select("date, score")
+        .order("date")
+        .execute()
+    )
 
-    query = """
-        SELECT date, score
-        FROM productivity
-        ORDER BY date
-    """
+    df = pd.DataFrame(result.data)
 
-    df = pd.read_sql_query(query, conn)
+    if df.empty:
+        return df
 
-    conn.close()
+    df["date"] = pd.to_datetime(df["date"])
 
     return df
 
