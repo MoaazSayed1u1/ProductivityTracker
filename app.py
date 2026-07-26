@@ -42,6 +42,9 @@ st.set_page_config(
     layout="wide"
 )
 
+import os
+
+st.write(os.path.abspath("data/productivity.db"))
 # ==========================
 # Database
 # ==========================
