@@ -20,9 +20,13 @@ from database.db import (
     get_completed_tasks,
     save_daily_reflection,
     get_daily_reflection,
-    get_last_7_reflections,
     get_last_30_days,
-    get_year_data
+    get_year_data,
+    get_weekly_review,
+    save_weekly_review,
+    get_all_weekly_reviews,
+    get_reflections_between,
+    START_DATE
 )
 from components.heatmap import prepare_heatmap_data
 from components.heatmap_chart import create_heatmap
@@ -32,6 +36,7 @@ from components.career_dialog import career_dialog
 from database.db import get_track_progress
 from services.todoist_service import get_projects
 from components.career_card import create_career_card
+from database.supabase_client import get_supabase
 # ==========================
 # Page Configuration
 # ==========================
@@ -42,9 +47,6 @@ st.set_page_config(
     layout="wide"
 )
 
-import os
-
-st.write(os.path.abspath("data/productivity.db"))
 # ==========================
 # Database
 # ==========================
@@ -223,6 +225,16 @@ with left:
         ):
             save_today(score)
 
+    supabase = get_supabase()
+
+    result = (
+        supabase
+        .table("productivity")
+        .select("*")
+        .order("date")
+        .execute()
+    )
+
 with right:
 
     with st.container(border=True):
@@ -263,64 +275,113 @@ with st.expander("📝 Daily Reflection", expanded=False):
 
 with st.expander("📅 Weekly Review", expanded=False):
 
-    reflections = get_last_7_reflections()
+    weekly_review = st.text_area(
+        "",
+        value=get_weekly_review(),
+        height=220,
+        placeholder="Write your weekly review...",
+        label_visibility="collapsed"
+    )
 
-    if not reflections:
-        st.info("No reflections yet.")
+    if st.button("💾 Save Weekly Review", use_container_width=True):
+        save_weekly_review(weekly_review)
+        st.success("Saved successfully ✅")
 
-    else:
 
-        for day, reflection in reflections:
+# ==========================
+# Journal History
+# ==========================
 
-            st.markdown(
-                f"""
+st.markdown("## 📚 Journal History")
+
+weeks = get_all_weekly_reviews()
+
+if not weeks:
+    st.info("No journal history yet.")
+
+for week in weeks:
+
+    start = datetime.strptime(week["week_start"], "%Y-%m-%d")
+    end = datetime.strptime(week["week_end"], "%Y-%m-%d")
+
+    start_date = start.date()
+    week_number = ((start_date - START_DATE).days // 7) + 1
+
+    with st.expander(
+        f"📅 Week {week_number} • {start.strftime('%d %b')} → {end.strftime('%d %b')}",
+        expanded=False
+    ):
+
+        st.markdown("""
+        <div style="
+            font-size:22px;
+            font-weight:600;
+            margin-bottom:12px;
+        ">
+        📝 Weekly Review
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="
+            background:#161B22;
+            border:1px solid #30363D;
+            border-radius:12px;
+            padding:14px;
+            font-size:15px;
+            line-height:1.6;
+            color:#E6EDF3;
+            margin-bottom:20px;
+        ">
+        {week["review"] if week["review"] else "No weekly review."}
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.divider()
+
+        reflections = get_reflections_between(
+            week["week_start"],
+            week["week_end"]
+        )
+
+        if not reflections:
+            st.info("No daily reflections.")
+
+        else:
+
+            for item in reflections:
+
+                day = datetime.strptime(
+                    item["date"],
+                    "%Y-%m-%d"
+                ).strftime("%A • %d %b")
+
+                st.markdown(f"""
                 <div style="
-                    font-size:17px;
-                    font-weight:700;
+                    font-size:18px;
+                    font-weight:600;
                     margin-top:18px;
                     margin-bottom:8px;
                     color:#F8FAFC;
                 ">
                     📅 {day}
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+                """, unsafe_allow_html=True)
 
-            st.markdown(
-                f"""
+                st.markdown(f"""
                 <div style="
                     background:#0D1117;
                     border:1px solid #30363D;
                     border-radius:12px;
                     padding:14px;
                     color:#D1D5DB;
-                    line-height:1.7;
-                    margin-bottom:12px;
+                    line-height:1.6;
+                    font-size:15px;
+                    margin-bottom:14px;
                 ">
-                    {reflection}
+                    {item["reflection"]}
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
-# ==========================
-# Heatmap
-# ==========================
-
-#st.divider()
-
-#st.markdown("""
-#<div class="card">
-#    <h3>📅 Productivity Overview</h3>
-#""", unsafe_allow_html=True)
-
-#st.plotly_chart(
-#    heatmap_fig,
-#    use_container_width=True,
-#    config={"displayModeBar": False}
-#)
-
-#st.markdown("</div>", unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
 # ==========================
 # Trend Chart

@@ -1,10 +1,10 @@
 import sqlite3
 from pathlib import Path
 from datetime import date, timedelta
+from datetime import datetime
 import pandas as pd
 from services.todoist_service import get_projects, get_tasks_by_project
-
-
+from database.supabase_client import get_supabase
 Path("data").mkdir(exist_ok=True)
 
 DB_FILE = "data/productivity.db"
@@ -91,36 +91,27 @@ def create_database():
 
 
 def save_today(score):
-    conn = get_connection()
+    supabase = get_supabase()
 
-    today = date.today().isoformat()
-
-    conn.execute("""
-        INSERT OR REPLACE INTO productivity(date, score)
-        VALUES(?,?)
-    """, (today, score))
-
-    conn.commit()
-    conn.close()
+    supabase.table("productivity").upsert({
+        "date": str(date.today()),
+        "score": score
+    }).execute()
 
 
 def get_today_score():
-    conn = get_connection()
+    supabase = get_supabase()
 
-    today = date.today().isoformat()
+    result = (
+        supabase
+        .table("productivity")
+        .select("score")
+        .eq("date", str(date.today()))
+        .execute()
+    )
 
-    cursor = conn.execute("""
-        SELECT score
-        FROM productivity
-        WHERE date=?
-    """, (today,))
-
-    row = cursor.fetchone()
-
-    conn.close()
-
-    if row:
-        return row[0]
+    if result.data:
+        return result.data[0]["score"]
 
     return 75
 
@@ -180,20 +171,17 @@ def get_month_average():
     return round(row[0], 1) if row[0] else 0
 
 def get_all_scores():
-    conn = get_connection()
+    supabase = get_supabase()
 
-    df = pd.read_sql_query(
-        """
-        SELECT
-            date,
-            score
-        FROM productivity
-        ORDER BY date
-        """,
-        conn
+    result = (
+        supabase
+        .table("productivity")
+        .select("date, score")
+        .order("date")
+        .execute()
     )
 
-    conn.close()
+    df = pd.DataFrame(result.data)
 
     if df.empty:
         return df
@@ -636,81 +624,60 @@ def update_task_status(task_id, completed):
 
 
 
+
+
+
+
+
 def save_daily_reflection(date, reflection):
+    supabase = get_supabase()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    supabase.table("daily_reflections").upsert({
+        "date": date,
+        "reflection": reflection
+    }).execute()
 
-    cursor.execute("""
-        INSERT OR REPLACE INTO daily_reflections (date, reflection)
-        VALUES (?, ?)
-    """, (date, reflection))
-
-    conn.commit()
-    conn.close()
 
 
 def get_daily_reflection(date):
+    supabase = get_supabase()
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    result = (
+        supabase
+        .table("daily_reflections")
+        .select("reflection")
+        .eq("date", date)
+        .execute()
+    )
 
-    cursor.execute("""
-        SELECT reflection
-        FROM daily_reflections
-        WHERE date = ?
-    """, (date,))
-
-    result = cursor.fetchone()
-
-    conn.close()
-
-    if result:
-        return result[0]
+    if result.data:
+        return result.data[0]["reflection"]
 
     return ""
 
 
 
 
-
-
-def get_last_7_reflections():
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT date, reflection
-        FROM daily_reflections
-        ORDER BY date DESC
-        LIMIT 7
-    """)
-
-    data = cursor.fetchall()
-
-    conn.close()
-
-    return data[::-1]   # علشان يبقى من الأقدم للأحدث
-
-
 def get_last_30_days():
+    supabase = get_supabase()
 
-    conn = get_connection()
+    result = (
+        supabase
+        .table("productivity")
+        .select("date, score")
+        .order("date", desc=True)
+        .limit(30)
+        .execute()
+    )
 
-    query = """
-        SELECT date, score
-        FROM productivity
-        ORDER BY date DESC
-        LIMIT 30
-    """
+    df = pd.DataFrame(result.data)
 
-    df = pd.read_sql_query(query, conn)
+    if df.empty:
+        return df
 
-    conn.close()
+    df["date"] = pd.to_datetime(df["date"])
 
     return df.sort_values("date")
-
 
 
 
@@ -729,3 +696,82 @@ def get_year_data():
     conn.close()
 
     return df
+
+
+
+START_DATE = date(2026, 7, 20)
+
+def get_current_week():
+    today = date.today()
+
+    days = (today - START_DATE).days
+    week_number = days // 7
+
+    week_start = START_DATE + timedelta(days=week_number * 7)
+    week_end = week_start + timedelta(days=6)
+
+    return week_start, week_end
+
+
+def save_weekly_review(review):
+    supabase = get_supabase()
+
+    week_start, week_end = get_current_week()
+
+    supabase.table("weekly_reviews").upsert({
+        "week_start": str(week_start),
+        "week_end": str(week_end),
+        "review": review,
+        "updated_at": datetime.now().isoformat()
+    }).execute()
+
+
+
+
+def get_weekly_review():
+    supabase = get_supabase()
+
+    week_start, _ = get_current_week()
+
+    result = (
+        supabase.table("weekly_reviews")
+        .select("review")
+        .eq("week_start", str(week_start))
+        .execute()
+    )
+
+    if result.data:
+        return result.data[0]["review"]
+
+    return ""
+
+
+
+def get_all_weekly_reviews():
+    supabase = get_supabase()
+
+    result = (
+        supabase
+        .table("weekly_reviews")
+        .select("*")
+        .order("week_start", desc=True)
+        .execute()
+    )
+
+    return result.data if result.data else []
+
+
+def get_reflections_between(start_date, end_date):
+    supabase = get_supabase()
+
+    result = (
+        supabase
+        .table("daily_reflections")
+        .select("date, reflection")
+        .gte("date", str(start_date))
+        .lte("date", str(end_date))
+        .order("date")
+        .execute()
+    )
+
+    return result.data if result.data else []
